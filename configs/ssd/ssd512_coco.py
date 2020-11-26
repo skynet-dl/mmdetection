@@ -3,6 +3,7 @@ input_size = 512
 model = dict(
     backbone=dict(input_size=input_size),
     bbox_head=dict(
+        num_classes=2,
         in_channels=(512, 1024, 512, 256, 256, 256, 256),
         anchor_generator=dict(
             type='SSDAnchorGenerator',
@@ -14,6 +15,7 @@ model = dict(
 # dataset settings
 dataset_type = 'CocoDataset'
 data_root = 'data/coco/'
+classes = ['Bag', 'Human']
 img_norm_cfg = dict(mean=[123.675, 116.28, 103.53], std=[1, 1, 1], to_rgb=True)
 train_pipeline = [
     dict(type='LoadImageFromFile', to_float32=True),
@@ -53,19 +55,37 @@ test_pipeline = [
         ])
 ]
 data = dict(
-    samples_per_gpu=8,
-    workers_per_gpu=3,
+    samples_per_gpu=6,
+    workers_per_gpu=16,
     train=dict(
-        _delete_=True,
-        type='RepeatDataset',
-        times=5,
-        dataset=dict(
-            type=dataset_type,
-            ann_file=data_root + 'annotations/instances_train2017.json',
-            img_prefix=data_root + 'train2017/',
-            pipeline=train_pipeline)),
-    val=dict(pipeline=test_pipeline),
-    test=dict(pipeline=test_pipeline))
+        type=dataset_type,
+        classes=classes,
+        ann_file='/home/rufina/hahaton/bmstu-hack/oid2coco_train.json',
+        img_prefix='/home/rufina/hahaton/oid2coco_train',        
+#         ann_file='/home/rufina/hahaton/coco/annotations/instances_val2014.json',
+#         img_prefix='/home/rufina/hahaton/coco/val2014',
+        pipeline=train_pipeline),
+    val=dict(
+        type=dataset_type,
+        classes=classes,
+        ann_file='/home/rufina/hahaton/bmstu-hack/oid2coco_validation.json',
+        img_prefix='/home/rufina/hahaton/oid2coco_validation', 
+        pipeline=test_pipeline),
+    test=dict(
+        type=dataset_type,
+        classes=classes,
+        ann_file='/home/rufina/hahaton/bmstu-hack/oid2coco_test.json',
+        img_prefix='/home/rufina/hahaton/oid2coco_test', 
+        pipeline=test_pipeline))
 # optimizer
 optimizer = dict(type='SGD', lr=2e-3, momentum=0.9, weight_decay=5e-4)
 optimizer_config = dict(_delete_=True)
+# runtime settings
+total_epochs = 150
+evaluation = dict(interval=5, metric=['bbox'])
+checkpoint_config = dict(interval=10)
+log_config = dict(  # config to register logger hook
+    hooks=[
+        dict(type='TensorboardLoggerHook'),  # The Tensorboard logger is also supported
+        dict(type='TextLoggerHook')
+    ])  # The logger used to record the training process.
