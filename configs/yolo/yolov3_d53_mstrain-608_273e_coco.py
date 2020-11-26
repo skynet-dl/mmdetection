@@ -2,7 +2,7 @@ _base_ = '../_base_/default_runtime.py'
 # model settings
 model = dict(
     type='YOLOV3',
-    pretrained='open-mmlab://darknet53',
+#     pretrained='open-mmlab://darknet53',
     backbone=dict(type='Darknet', depth=53, out_indices=(3, 4, 5)),
     neck=dict(
         type='YOLOV3Neck',
@@ -11,7 +11,7 @@ model = dict(
         out_channels=[512, 256, 128]),
     bbox_head=dict(
         type='YOLOV3Head',
-        num_classes=80,
+        num_classes=2,
         in_channels=[512, 256, 128],
         out_channels=[1024, 512, 256],
         anchor_generator=dict(
@@ -52,6 +52,7 @@ test_cfg = dict(
 # dataset settings
 dataset_type = 'CocoDataset'
 data_root = 'data/coco/'
+classes = ['Bag', 'Human']
 img_norm_cfg = dict(mean=[0, 0, 0], std=[255., 255., 255.], to_rgb=True)
 train_pipeline = [
     dict(type='LoadImageFromFile', to_float32=True),
@@ -89,22 +90,27 @@ test_pipeline = [
         ])
 ]
 data = dict(
-    samples_per_gpu=8,
-    workers_per_gpu=4,
+    samples_per_gpu=6,
+    workers_per_gpu=16,
     train=dict(
         type=dataset_type,
-        ann_file=data_root + 'annotations/instances_train2017.json',
-        img_prefix=data_root + 'train2017/',
+        classes=classes,
+        ann_file='/home/rufina/hahaton/bmstu-hack/oid2coco_train.json',
+        img_prefix='/home/rufina/hahaton/oid2coco_train',
+#         ann_file='/home/rufina/hahaton/coco/annotations/instances_val2014.json',
+#         img_prefix='/home/rufina/hahaton/coco/val2014',
         pipeline=train_pipeline),
     val=dict(
         type=dataset_type,
-        ann_file=data_root + 'annotations/instances_val2017.json',
-        img_prefix=data_root + 'val2017/',
+        classes=classes,
+        ann_file='/home/rufina/hahaton/bmstu-hack/oid2coco_validation.json',
+        img_prefix='/home/rufina/hahaton/oid2coco_validation',
         pipeline=test_pipeline),
     test=dict(
         type=dataset_type,
-        ann_file=data_root + 'annotations/instances_val2017.json',
-        img_prefix=data_root + 'val2017/',
+        classes=classes,
+        ann_file='/home/rufina/hahaton/bmstu-hack/oid2coco_test.json',
+        img_prefix='/home/rufina/hahaton/oid2coco_test', 
         pipeline=test_pipeline))
 # optimizer
 optimizer = dict(type='SGD', lr=0.001, momentum=0.9, weight_decay=0.0005)
@@ -117,5 +123,11 @@ lr_config = dict(
     warmup_ratio=0.1,
     step=[218, 246])
 # runtime settings
-total_epochs = 273
-evaluation = dict(interval=1, metric=['bbox'])
+total_epochs = 150
+evaluation = dict(interval=5, metric=['bbox'])
+checkpoint_config = dict(interval=10)
+log_config = dict(  # config to register logger hook
+    hooks=[
+        dict(type='TensorboardLoggerHook'),  # The Tensorboard logger is also supported
+        dict(type='TextLoggerHook')
+    ])  # The logger used to record the training process.
