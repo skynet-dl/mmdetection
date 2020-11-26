@@ -77,9 +77,19 @@ data = dict(
         ann_file='/home/rufina/hahaton/bmstu-hack/oid2coco_test.json',
         img_prefix='/home/rufina/hahaton/oid2coco_test', 
         pipeline=test_pipeline))
+# # optimizer
+# optimizer = dict(type='SGD', lr=2e-3, momentum=0.9, weight_decay=5e-4)
+# optimizer_config = dict(_delete_=True)
 # optimizer
-optimizer = dict(type='SGD', lr=2e-3, momentum=0.9, weight_decay=5e-4)
-optimizer_config = dict(_delete_=True)
+optimizer = dict(type='SGD', lr=0.001, momentum=0.9, weight_decay=0.0005)
+optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
+# learning policy
+lr_config = dict(
+    policy='step',
+    warmup='linear',
+    warmup_iters=2000,  # same as burn-in in darknet
+    warmup_ratio=0.1,
+    step=[218, 246])
 # runtime settings
 total_epochs = 150
 evaluation = dict(interval=5, metric=['bbox'])
